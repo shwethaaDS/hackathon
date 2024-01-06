@@ -1,0 +1,49 @@
+import networkx as nx
+import json
+
+def parse_input(input_data):
+    distances = {}
+    neighborhoods = input_data.get("neighbourhoods", {})  # Use get method to handle missing key
+    for n_id, n_info in neighborhoods.items():
+        distances[n_id] = n_info["distances"]
+
+    return distances
+
+def tsp_solver(distance_matrix, start_node):
+    graph = nx.Graph()
+    for node, distances in distance_matrix.items():
+        for other_node, distance in enumerate(distances):
+            if node != other_node:
+                graph.add_edge(node, f"n{other_node}", weight=distance)
+
+    # Solve the TSP using the Held-Karp algorithm
+    tsp_path = nx.approximation.traveling_salesman_problem(graph, cycle=True)
+
+    # Check if the start_node is in tsp_path, otherwise, add it
+    if start_node not in tsp_path:
+        tsp_path.append(start_node)
+
+    # Reorder the path to start and end at the specified node
+    start_index = tsp_path.index(start_node)
+    tsp_path = tsp_path[start_index:] + tsp_path[:start_index + 1]
+
+    return tsp_path
+
+
+
+def format_output(tsp_path):
+    output = {"v0": {"path": tsp_path}}
+    return output
+
+if __name__ == "__main__":
+
+    input_file_path = "Z:\hackathon\level0.json"
+    with open(input_file_path, 'r') as f:
+        input_data = json.load(f)
+    start_node = "r0"
+
+    distance_matrix = parse_input(input_data)
+    tsp_path = tsp_solver(distance_matrix, start_node)
+    output_data = format_output(tsp_path)
+
+    print(output_data)
